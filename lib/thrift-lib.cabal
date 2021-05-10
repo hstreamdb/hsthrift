@@ -25,6 +25,11 @@ description:
     NOTE: for build instructions and documentation, see
     https://github.com/facebookincubator/hsthrift
 
+flag use_sys_thrift_compiler
+  description: Use system thrift-compiler instead of build from source.
+  manual:      True
+  default:     False
+
 source-repository head
     type: git
     location: https://github.com/facebookincubator/hsthrift.git
@@ -57,8 +62,8 @@ common fb-haskell
         TypeFamilies
         TypeSynonymInstances
         NondecreasingIndentation
-    build-tool-depends: thrift-compiler:thrift-compiler
-
+    if !flag(use_sys_thrift_compiler)
+        build-tool-depends: thrift-compiler:thrift-compiler
 
 library
     import: fb-haskell
