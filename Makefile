@@ -1,7 +1,7 @@
 # These are a few rules to help build the open-source hsthrift. This
 # file will hopefully go away in due course.
 
-CABAL=cabal
+CABAL ?= cabal
 
 all:: compiler thrift-hs thrift-cpp server
 
@@ -16,7 +16,7 @@ util::
 
 thrift:: thrift-cpp thrift-hs
 
-THRIFT_COMPILE = $(CABAL) run exe:thrift-compiler --
+THRIFT_COMPILE ?= $(CABAL) run exe:thrift-compiler --
 
 thrift-hs::
 	(cd lib && $(THRIFT_COMPILE) --hs \
