@@ -6,6 +6,7 @@ module Thrift.Channel.HeaderChannel
   , getRequestChannelProtocolId
   , withHeaderChannel
   , withHeaderChannelIO
+  , withHeaderChannel'
   ) where
 
 import Data.Proxy
@@ -25,6 +26,15 @@ withHeaderChannel
     -> IO a
 withHeaderChannel io HeaderConfig{..} fn = do
   withHeaderChannelForTransport io HeaderConfig{..} makeRawTransport fn
+
+withHeaderChannel'
+    :: EventBaseDataplane
+    -> HeaderConfig t
+    -> Bool
+    -> (forall p . Protocol p => ThriftM p HeaderWrappedChannel t a)
+    -> IO a
+withHeaderChannel' io HeaderConfig{..} lookup fn = do
+  withHeaderChannelForTransport' io HeaderConfig{..} lookup makeRawTransport fn
 
 withHeaderChannelIO
     :: EventBaseDataplane
