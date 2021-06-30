@@ -68,38 +68,6 @@ withHeaderChannelForTransport io HeaderConfig{..} transportMaker fn = do
       -> IO a
     runAction c a _ = withCppChannel c a
 
-withHeaderChannelForTransport'
-    :: EventBaseDataplane
-    -> HeaderConfig t
-    -> Bool
-    -> FunPtr (CppSocketAddress -> EventBase -> CSize
-    -> IO (Ptr CppAsyncTransport))
-    -> (forall p . Protocol p => ThriftM p HeaderWrappedChannel t a)
-    -> IO a
-withHeaderChannelForTransport' io HeaderConfig{..} lookup transportMaker fn = do
-  eb <- getEventBase io
-  BS.unsafeUseAsCStringLen headerHost $ \(host_str, host_len) -> bracket
-    (newHeaderChannel_ host_str (fromIntegral host_len) lookup
-                      (fromIntegral headerPort)
-                      transportMaker
-                      headerProtocolId
-                      (fromIntegral headerConnTimeout)
-                      (fromIntegral headerSendTimeout)
-                      (fromIntegral headerRecvTimeout)
-                      eb
-                      )
-    deleteHeaderChannel $ \ch -> do
-      protId <- getRequestChannelProtocolId ch
-      withProxy protId $ runAction ch fn
-  where
-    runAction
-      :: Protocol p
-      => Ptr CppRequestChannelPtr
-      -> ThriftM p HeaderWrappedChannel t a
-      -> Proxy p
-      -> IO a
-    runAction c a _ = withCppChannel c a
-
 withHeaderChannelIOForTransport
     :: EventBaseDataplane
     -> HeaderConfig t
@@ -137,20 +105,58 @@ foreign import ccall safe "newHeaderChannel"
                   -> EventBase
                   -> IO (Ptr CppRequestChannelPtr)
 
-foreign import ccall safe "newHeaderChannel_"
-  newHeaderChannel_ :: CString -> CSize -> Bool
-                    -> CSize
-                    -> FunPtr (CppSocketAddress -> EventBase -> CSize
-                    -> IO (Ptr CppAsyncTransport))
-                    -> CUShort
-                    -> CSize
-                    -> CSize
-                    -> CSize
-                    -> EventBase
-                    -> IO (Ptr CppRequestChannelPtr)
-
 foreign import ccall safe "deleteHeaderChannel"
   deleteHeaderChannel :: Ptr CppRequestChannelPtr -> IO ()
 
 foreign import ccall unsafe "getRequestChannelProtocolId"
   getRequestChannelProtocolId :: Ptr CppRequestChannelPtr -> IO CUShort
+
+-------------------------------------------------------------------------------
+
+withHeaderChannelForTransport'
+    :: EventBaseDataplane
+    -> HeaderConfig t
+    -> Bool -> Bool
+    -> FunPtr (CppSocketAddress -> EventBase -> CSize
+    -> IO (Ptr CppAsyncTransport))
+    -> (forall p . Protocol p => ThriftM p HeaderWrappedChannel t a)
+    -> IO a
+withHeaderChannelForTransport' io HeaderConfig{..} lookup fromPath transportMaker fn = do
+  eb <- getEventBase io
+  BS.unsafeUseAsCStringLen headerHost $ \(host_str, host_len) -> bracket
+    (newHeaderChannelExtra
+      host_str (fromIntegral host_len)
+      (fromIntegral headerPort)
+      lookup
+      fromPath
+      transportMaker
+      headerProtocolId
+      (fromIntegral headerConnTimeout)
+      (fromIntegral headerSendTimeout)
+      (fromIntegral headerRecvTimeout)
+      eb
+    )
+    deleteHeaderChannel $ \ch -> do
+      protId <- getRequestChannelProtocolId ch
+      withProxy protId $ runAction ch fn
+  where
+    runAction
+      :: Protocol p
+      => Ptr CppRequestChannelPtr
+      -> ThriftM p HeaderWrappedChannel t a
+      -> Proxy p
+      -> IO a
+    runAction c a _ = withCppChannel c a
+
+foreign import ccall safe "newHeaderChannelExtra"
+  newHeaderChannelExtra
+    :: CString -> CSize -> CSize
+    -> Bool -> Bool
+    -> FunPtr (CppSocketAddress -> EventBase -> CSize
+    -> IO (Ptr CppAsyncTransport))
+    -> CUShort
+    -> CSize
+    -> CSize
+    -> CSize
+    -> EventBase
+    -> IO (Ptr CppRequestChannelPtr)

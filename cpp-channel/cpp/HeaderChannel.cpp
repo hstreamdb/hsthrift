@@ -64,18 +64,21 @@ folly::AsyncTransport::UniquePtr makeRawTransport(
   return AsyncSocket::newSocket(eb, addr, conn_timeout);
 }
 
-HeaderClientChannel::Ptr* newHeaderChannel_(
-    const char* host_str,
-    size_t host_len,
-    bool allow_name_lookup,
-    size_t port,
-    MakeTransport makeTransport,
-    protocol::PROTOCOL_TYPES protocol_id,
-    size_t conn_timeout,
-    size_t send_timeout,
-    size_t recv_timeout,
-    EventBase* eb) noexcept {
-  SocketAddress addr(std::string(host_str, host_len), port, allow_name_lookup);
+HeaderClientChannel::Ptr*
+newHeaderChannelExtra(const char* host_str, size_t host_len, size_t port,
+                      bool allow_name_lookup, bool from_path,
+                      //
+                      MakeTransport makeTransport,
+                      protocol::PROTOCOL_TYPES protocol_id, size_t conn_timeout,
+                      size_t send_timeout, size_t recv_timeout,
+                      EventBase* eb) noexcept {
+  SocketAddress addr;
+  if (from_path) {
+    addr = SocketAddress::makeFromPath(std::string(host_str, host_len));
+  } else {
+    addr =
+        SocketAddress(std::string(host_str, host_len), port, allow_name_lookup);
+  }
 
   // Construction of the socket needs to be in the event base thread
   auto f = folly::via(eb, [=, &addr] {

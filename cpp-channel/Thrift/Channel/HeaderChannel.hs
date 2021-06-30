@@ -27,15 +27,6 @@ withHeaderChannel
 withHeaderChannel io HeaderConfig{..} fn = do
   withHeaderChannelForTransport io HeaderConfig{..} makeRawTransport fn
 
-withHeaderChannel'
-    :: EventBaseDataplane
-    -> HeaderConfig t
-    -> Bool
-    -> (forall p . Protocol p => ThriftM p HeaderWrappedChannel t a)
-    -> IO a
-withHeaderChannel' io HeaderConfig{..} lookup fn = do
-  withHeaderChannelForTransport' io HeaderConfig{..} lookup makeRawTransport fn
-
 withHeaderChannelIO
     :: EventBaseDataplane
     -> HeaderConfig t
@@ -48,3 +39,13 @@ foreign import ccall "&makeRawTransport"
   makeRawTransport ::
     FunPtr (CppSocketAddress -> EventBase -> CSize
       -> IO (Ptr CppAsyncTransport))
+
+
+withHeaderChannel'
+    :: EventBaseDataplane
+    -> HeaderConfig t
+    -> Bool -> Bool
+    -> (forall p . Protocol p => ThriftM p HeaderWrappedChannel t a)
+    -> IO a
+withHeaderChannel' io HeaderConfig{..} lookup fromPath fn = do
+  withHeaderChannelForTransport' io HeaderConfig{..} lookup fromPath makeRawTransport fn
