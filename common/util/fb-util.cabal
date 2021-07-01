@@ -157,6 +157,10 @@ library
         cpp/HsOption.h
         cpp/HsStruct.h
         cpp/HsStructDefines.h
+        cpp/Destructible.h
+
+    cxx-options: -std=c++17
+
     include-dirs: .
     hs-source-dirs: .
 
