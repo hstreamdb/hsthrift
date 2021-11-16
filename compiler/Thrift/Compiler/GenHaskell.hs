@@ -219,6 +219,7 @@ commonPragmas Options{ optsLangSpecific = HsOpts{..} } =
   [ LanguagePragma () [textToName "OverloadedStrings"]
   , LanguagePragma () [textToName "BangPatterns"]
   , OptionsPragma () (Just GHC) "-fno-warn-unused-imports"
+  , OptionsPragma () (Just GHC) "-fno-warn-redundant-constraints"
   , OptionsPragma () (Just GHC) "-fno-warn-overlapping-patterns"
   , OptionsPragma () (Just GHC) "-fno-warn-incomplete-patterns"
   , OptionsPragma () (Just GHC) "-fno-warn-incomplete-uni-patterns"
